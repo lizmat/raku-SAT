@@ -39,36 +39,48 @@ role Solver {
         self.solve: $lines.Supply, |c
     }
 
-    multi method solve (Supply $lines --> Promise) {
-        self.solve: $lines, my $dummy;
+    multi method solve (Supply $lines, |c --> Promise) {
+        self.solve: $lines, my $dummy, |c
     }
 
-    multi method solve (Supply $lines, $witness is rw --> Promise) { … }
+    # The `*% ()` stops this candidate from swallowing the :now
+    # adverb because methods normally accept any named arguments.
+    # So if this candidate (without the `*% ()`) would be
+    # implemented the Solver class, as required by the role,
+    # it would take precedence and eat every method call with
+    # a Supply positional, even those with :now. b2gills++ for
+    # explaining that.
+    #
+    # By using `*% ()`, we force the class using this role to
+    # supply a candidate which doesn't interfere with :now calling.
+    # They can still choose to provide a candidate that swallows
+    # :now as well, if they don't like how :now is handled here.
+    multi method solve (Supply $lines, $witness is rw, *% () --> Promise) { … }
 }
 
 # TODO: Support approximate counters
 role Counter {
-    multi method count (:$now where *.so, |c --> Bool) {
+    multi method count (:$now where *.so, |c --> Int) {
         await self.count: |c
     }
 
-    multi method count (IO::Path $file --> Promise) {
-        self.count: $file.lines
+    multi method count (IO::Path $file, |c --> Promise) {
+        self.count: $file.lines, |c
     }
 
-    multi method count (Str $DIMACS --> Promise) {
-        self.count: $DIMACS.lines
+    multi method count (Str $DIMACS, |c --> Promise) {
+        self.count: $DIMACS.lines, |c
     }
 
-    multi method count (List $lines --> Promise) {
-        self.count: $lines.Supply
+    multi method count (List $lines, |c --> Promise) {
+        self.count: $lines.Supply, |c
     }
 
-    multi method count (Seq $lines --> Promise) {
-        self.count: $lines.Supply
+    multi method count (Seq $lines, |c --> Promise) {
+        self.count: $lines.Supply, |c
     }
 
-    multi method count (Supply $lines --> Promise) { … }
+    multi method count (Supply $lines, *% () --> Promise) { … }
 }
 
 role Enumerator {
@@ -76,23 +88,23 @@ role Enumerator {
         self.enumerate(|c).List
     }
 
-    multi method enumerate (IO::Path $file --> Supply) {
-        self.enumerate: $file.lines
+    multi method enumerate (IO::Path $file, |c --> Supply) {
+        self.enumerate: $file.lines, |c
     }
 
-    multi method enumerate (Str $DIMACS --> Supply) {
-        self.enumerate: $DIMACS.lines
+    multi method enumerate (Str $DIMACS, |c --> Supply) {
+        self.enumerate: $DIMACS.lines, |c
     }
 
-    multi method enumerate (List $lines --> Supply) {
-        self.enumerate: $lines.Supply
+    multi method enumerate (List $lines, |c --> Supply) {
+        self.enumerate: $lines.Supply, |c
     }
 
-    multi method enumerate (Seq $lines --> Supply) {
-        self.enumerate: $lines.Supply
+    multi method enumerate (Seq $lines, |c --> Supply) {
+        self.enumerate: $lines.Supply, |c
     }
 
-    multi method enumerate (Supply $lines --> Supply) { … }
+    multi method enumerate (Supply $lines, *% () --> Supply) { … }
 }
 
 # TODO
@@ -100,24 +112,33 @@ role Enumerator {
 
 sub sat-solve (|c) is export {
     for SAT::Solver::.values.grep(* ~~ SAT::Solver) {
-        try .new.solve(|c)
-        andthen .return
+        return .new.solve(|c);
+        CATCH {
+            when X::Multi::NoMatch { .resume }
+            default                { .rethrow }
+        }
     }
     die "no suitable SAT::Solver found";
 }
 
 sub sat-count (|c) is export {
     for SAT::Counter::.values.grep(* ~~ SAT::Counter) {
-        try .new.count(|c)
-        andthen .return
+        return .new.count(|c);
+        CATCH {
+            when X::Multi::NoMatch { .resume }
+            default                { .rethrow }
+        }
     }
     die "no suitable SAT::Counter found";
 }
 
 sub sat-enumerate (|c) is export {
     for SAT::Enumerator::.values.grep(* ~~ SAT::Enumerator) {
-        try .new.enumerate(|c)
-        andthen .return
+        return .new.enumerate(|c);
+        CATCH {
+            when X::Multi::NoMatch { .resume }
+            default                { .rethrow }
+        }
     }
     die "no suitable SAT::Enumerator found";
 }
