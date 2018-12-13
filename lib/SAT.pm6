@@ -111,7 +111,8 @@ role Enumerator {
 # role Maximizer { }
 
 sub sat-solve (|c) is export {
-    for SAT::Solver::.values.grep(* ~~ SAT::Solver) {
+    my $solvers := SAT::Solver::.values.grep(* ~~ SAT::Solver);
+    for ($*SAT-SOLVER // Empty, |$solvers) {
         return .new.solve(|c);
         CATCH {
             when X::Multi::NoMatch { .resume }
@@ -122,7 +123,8 @@ sub sat-solve (|c) is export {
 }
 
 sub sat-count (|c) is export {
-    for SAT::Counter::.values.grep(* ~~ SAT::Counter) {
+    my $counters := SAT::Counter::.values.grep(* ~~ SAT::Counter);
+    for ($*SAT-COUNTER // Empty, |$counters) {
         return .new.count(|c);
         CATCH {
             when X::Multi::NoMatch { .resume }
@@ -133,7 +135,8 @@ sub sat-count (|c) is export {
 }
 
 sub sat-enumerate (|c) is export {
-    for SAT::Enumerator::.values.grep(* ~~ SAT::Enumerator) {
+    my $enumerators := SAT::Enumerator::.values.grep(* ~~ SAT::Enumerator);
+    for ($*SAT-ENUMERATOR // Empty, |$enumerators) {
         return .new.enumerate(|c);
         CATCH {
             when X::Multi::NoMatch { .resume }
