@@ -1,0 +1,9 @@
+  + Documentation and README. Make a dummy class for testing dispatch of the
+    interface definitions. That class can also be used to test the testing
+    routines.
+
+  + Like SAT::Solver modules can provide solvers with or without witnesses,
+    SAT::Counter should make provisions to support approximate counters.
+
+  + Maybe implement pure-perl solvers of every kind in here to have (slow)
+    fallbacks.
