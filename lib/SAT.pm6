@@ -110,12 +110,21 @@ role Enumerator {
 # TODO
 # role Maximizer { }
 
+# All the dynamic variables $*SAT-SOLVER, $*SAT-COUNTER, $*SAT-ENUMERATOR
+# have precendence over lookup in the packages.
+#
+# NOTE: Detection of the SAT::Solver etc. roles might fail if the solver
+# does these roles via parameterized roles, R#2551.
+
 sub sat-solve (|c) is export {
-    my $solvers := SAT::Solver::.values.grep(* ~~ SAT::Solver);
-    for ($*SAT-SOLVER // Empty, |$solvers) {
+    my $solvers := gather {
+        take $*SAT-SOLVER if try $*SAT-SOLVER ~~ SAT::Solver;
+        take $_ for SAT::Solver::.values.grep(* ~~ SAT::Solver);
+    }
+    for $solvers {
         return .new.solve(|c);
         CATCH {
-            when X::Multi::NoMatch { .resume }
+            when X::Multi::NoMatch { .resume  }
             default                { .rethrow }
         }
     }
@@ -123,11 +132,14 @@ sub sat-solve (|c) is export {
 }
 
 sub sat-count (|c) is export {
-    my $counters := SAT::Counter::.values.grep(* ~~ SAT::Counter);
-    for ($*SAT-COUNTER // Empty, |$counters) {
+    my $counters := gather {
+        take $*SAT-COUNTER if try $*SAT-COUNTER ~~ SAT::Counter;
+        take $_ for SAT::Counter::.values.grep(* ~~ SAT::Counter);
+    }
+    for $counters {
         return .new.count(|c);
         CATCH {
-            when X::Multi::NoMatch { .resume }
+            when X::Multi::NoMatch { .resume  }
             default                { .rethrow }
         }
     }
@@ -135,11 +147,14 @@ sub sat-count (|c) is export {
 }
 
 sub sat-enumerate (|c) is export {
-    my $enumerators := SAT::Enumerator::.values.grep(* ~~ SAT::Enumerator);
-    for ($*SAT-ENUMERATOR // Empty, |$enumerators) {
+    my $enumerators := gather {
+        take $*SAT-ENUMERATOR if try $*SAT-ENUMERATOR ~~ SAT::Enumerator;
+        take $_ for SAT::Enumerator::.values.grep(* ~~ SAT::Enumerator);
+    }
+    for $enumerators {
         return .new.enumerate(|c);
         CATCH {
-            when X::Multi::NoMatch { .resume }
+            when X::Multi::NoMatch { .resume  }
             default                { .rethrow }
         }
     }
