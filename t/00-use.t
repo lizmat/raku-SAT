@@ -1,6 +1,9 @@
 use Test;
+use Test::META;
 
-plan 2;
+plan 3;
+
+meta-ok;
 
 use-ok 'SAT';
 use-ok 'Test::SAT';
