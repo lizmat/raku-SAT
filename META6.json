@@ -6,9 +6,13 @@
   "description"   : "Generic SAT solver interface and testing",
   "tags"          : [ ],
   "license"       : "Artistic-2.0",
-  "depends"       : [ ],
+  "depends"       : [
+    "Compress::Zlib"
+  ],
   "build-depends" : [ ],
-  "test-depends"  : ["Test::META"],
+  "test-depends"  : [
+    "Test::META"
+  ],
   "resources"     : [ ],
   "provides"      : {
     "SAT"         : "lib/SAT.pm6",
