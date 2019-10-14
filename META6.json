@@ -18,5 +18,5 @@
     "SAT"         : "lib/SAT.pm6",
     "Test::SAT"   : "lib/Test/SAT.pm6"
   },
-  "source-url"    : "git://github.com/taboege/p6-SAT.git"
+  "source-url"    : "git://github.com/taboege/raku-SAT.git"
 }
